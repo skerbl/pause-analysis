@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -15,6 +14,7 @@ namespace PauseAnalysisTool
         private string fileName;
         private XDocument xmlDocument;
         private log keyLog;
+        private List<@event> eventList;
 
         public PauseAnalysis(string fileName)
         {
@@ -27,14 +27,14 @@ namespace PauseAnalysisTool
         /// <exception cref="XmlSchemaException"></exception>
         public void ValidateFile()
         {
+            keyLog = new log();
+            eventList = new List<@event>();
             XmlSchemaSet schema = new XmlSchemaSet();
             schema.Add("", Environment.CurrentDirectory + @"\Schema_InputLog.xsd");
             xmlDocument = XDocument.Load(fileName);
-            bool validationErrors = false;
 
             xmlDocument.Validate(schema, (s, e) =>
             {
-                validationErrors = true;
                 throw new XmlSchemaException(e.Message);
             });
         }
@@ -46,26 +46,7 @@ namespace PauseAnalysisTool
         {
             XmlSerializer serializer = new XmlSerializer(typeof(log));
 
-            log mylog = serializer.Deserialize(new FileStream(fileName, FileMode.Open)) as log;
-
-            /*
-            if (mylog != null)
-            {
-                Console.WriteLine("Parsing succsessful.");
-
-                for (int i = 0; i < mylog.session.Length; i++)
-                {
-                    Console.WriteLine(mylog.session[i].key + "\t" + mylog.session[i].value);
-                }
-
-                for (int i = 0; i < mylog.@event.Length; i++)
-                {
-                    int duration = int.Parse(mylog.@event[i].part.endTime) - int.Parse(mylog.@event[i].part.startTime);
-
-                    Console.WriteLine(mylog.@event[i].id + "\t" + mylog.@event[i].type + "\t" + duration);
-                }
-            }
-            */
+            keyLog = serializer.Deserialize(new FileStream(fileName, FileMode.Open)) as log;
         }
 
         /// <summary>
@@ -73,17 +54,99 @@ namespace PauseAnalysisTool
         /// </summary>
         public void FilterData()
         {
-            List<UserEvent> userEvents = new List<UserEvent>();
+            eventList = keyLog.@event.ToList();
+            FilterMouseMovement();
+            FilterByFocus();
 
-            foreach (var action in keyLog.@event)
-            {
-                
-            }
+            Console.WriteLine("Filter applied successfully. Removed " + (keyLog.@event.Length - eventList.Count) + " items.");
+            Console.WriteLine("Final list contains " + eventList.Count + " items.");
         }
 
+        /// <summary>
+        /// Converts the keylog data into a simplified format and exports it as a .csv file.
+        /// </summary>
+        /// <param name="fileName">The name of the original file without file extension.</param>
+        public void ConvertToCsv(string fileName)
+        {
+            const string header = "ID|Type|Value|Start|End";
+            List<UserEvent> simlifiedList = new List<UserEvent>();
+
+            foreach (@event item in eventList)
+            {
+                int tId = int.Parse(item.id);
+                string tType = item.type;
+                string tValue = item.part.Items[0].ToString().ToLower(); ;
+                int tStart = int.Parse(item.part.startTime);
+                int tEnd = int.Parse(item.part.endTime);
+
+                simlifiedList.Add(new UserEvent(tId, tType, tValue, tStart, tEnd));
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(header);
+
+            foreach (UserEvent item in simlifiedList)
+            {
+                sb.AppendLine(item.ToString());
+            }
+
+            File.WriteAllText(
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName + ".csv"),
+                sb.ToString());
+        }
+
+        /// <summary>
+        /// Removes mouse movement and scrolling from eventList
+        /// </summary>
         private void FilterMouseMovement()
         {
-            
+            int counter = 0;
+
+            foreach (@event item in eventList.ToList())
+            {
+                if (item.type == "mouse" && item.part.type != "mouse")
+                {
+                    eventList.Remove(item);
+                    counter++;
+                }
+            }
+
+            //Console.WriteLine("FilterMouseMovement: Removed " + counter + " events.");
+        }
+
+        /// <summary>
+        /// Removes everything that does not happen in a specific window
+        /// </summary>
+        private void FilterByFocus()
+        {
+            int counter = 0;
+            bool inFocus = false;
+            const string windowTitle = "Übersetzung.docx - Word";
+
+            foreach (@event item in eventList.ToList())
+            {
+                if (!inFocus)
+                {
+                    if (item.type == "focus" && item.part.title == windowTitle)
+                    {
+                        inFocus = true;
+                    }
+
+                    eventList.Remove(item);
+                    counter++;
+                }
+                else
+                {
+                    if (item.type == "focus" && item.part.title != windowTitle)
+                    {
+                        inFocus = false;
+                        eventList.Remove(item);
+                        counter++;
+                    }
+                }
+            }
+
+            //Console.WriteLine("FilterByFocus: Removed " + counter + " events.");
         }
     }
 }

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml.Schema;
 
 namespace PauseAnalysisTool
@@ -15,12 +12,15 @@ namespace PauseAnalysisTool
         {
             if (args.Length != 1)
             {
-                Console.WriteLine("Usage error. Please specify a valid filename.");
+                Console.WriteLine("Usage error. Please specify a file containing valid keylog data created by InputLog 7.");
                 return;
             }
 
-            string fileName = args[0];
+            string inputPath = args[0];
             string tempFileName = string.Empty;
+
+            string extension = Path.GetExtension(inputPath).Split().First();
+            string fileName = Path.GetFileNameWithoutExtension(inputPath);
 
             try
             {
@@ -28,7 +28,7 @@ namespace PauseAnalysisTool
                 FileInfo fileInfo = new FileInfo(tempFileName);
                 fileInfo.Attributes = FileAttributes.Temporary;
 
-                File.Copy(fileName, tempFileName, true);
+                File.Copy(inputPath, tempFileName, true);
 
                 //Remove the hex value of the illegal backspace character. The XML parser doesn't like that.
                 ReplaceInFile(tempFileName, " &#x8;", "");
@@ -46,9 +46,15 @@ namespace PauseAnalysisTool
             try
             {
                 pauseAnalysis.ValidateFile();
-                Console.WriteLine("XML schema validated.");
+                Console.WriteLine("XML schema valid.");
                 pauseAnalysis.ParseData();
-                Console.WriteLine("Data parsed successfully.");
+
+                pauseAnalysis.FilterData();
+
+                pauseAnalysis.ConvertToCsv(fileName);
+
+                // TODO: Collapse the repeated log events for held down keys into one event.
+                // TODO: Find best way to include session information. Write to a new CSV?
             }
             catch (XmlSchemaException ex)
             {
