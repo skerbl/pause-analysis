@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="log">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="meta">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" name="entry">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="key" type="xs:string" />
+                                        <xs:element name="value" type="xs:string" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="session">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" name="entry">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="key" type="xs:string" />
+                                        <xs:element name="value" type="xs:string" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element maxOccurs="unbounded" name="event">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="part">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element minOccurs="0" name="title" type="xs:string" />
+                                        <xs:element name="startTime" type="xs:unsignedInt" />
+                                        <xs:element name="endTime" type="xs:unsignedInt" />
+                                        <xs:element minOccurs="0" name="key" type="xs:string" />
+                                        <xs:element minOccurs="0" name="value" type="xs:string" />
+                                        <xs:element minOccurs="0" name="keyboardstate">
+                                            <xs:complexType>
+                                                <xs:sequence minOccurs="0">
+                                                    <xs:element maxOccurs="unbounded" name="key" type="xs:string" />
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element minOccurs="0" name="x" type="xs:short" />
+                                        <xs:element minOccurs="0" name="y" type="xs:short" />
+                                        <xs:element minOccurs="0" name="type" type="xs:string" />
+                                        <xs:element minOccurs="0" name="orientation" type="xs:string" />
+                                        <xs:element minOccurs="0" name="delta" type="xs:short" />
+                                        <xs:element minOccurs="0" name="button" type="xs:string" />
+                                    </xs:sequence>
+                                    <xs:attribute name="type" type="xs:string" use="required" />
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="type" type="xs:string" use="required" />
+                        <xs:attribute name="id" type="xs:unsignedShort" use="required" />
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
