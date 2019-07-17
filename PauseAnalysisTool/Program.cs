@@ -30,8 +30,9 @@ namespace PauseAnalysisTool
 
                 File.Copy(inputPath, tempFileName, true);
 
-                //Remove the hex value of the illegal backspace character. The XML parser doesn't like that.
-                ReplaceInFile(tempFileName, " &#x8;", "");
+                //Remove the hex value of the illegal backspace and CTRL characters. The XML parser doesn't like that.
+                ReplaceInFile(tempFileName, "&#x8;", "BACKSPACE");
+                ReplaceInFile(tempFileName, "&#xc;", "CTRL");
             }
             catch (FileNotFoundException ex)
             {
@@ -60,10 +61,6 @@ namespace PauseAnalysisTool
             {
                 Console.WriteLine("The XML file you entered is not valid: " + ex.Message);
             }
-            
-            
-
-            Console.Read();
         }
 
         /// <summary>
