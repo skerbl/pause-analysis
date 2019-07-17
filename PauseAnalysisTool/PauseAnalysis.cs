@@ -58,7 +58,7 @@ namespace PauseAnalysisTool
             FilterMouseMovement();
             FilterByFocus();
 
-            Console.WriteLine("Filter applied successfully. Removed " + (keyLog.@event.Length - eventList.Count) + " items.");
+            Console.WriteLine("Filter applied. Removed " + (keyLog.@event.Length - eventList.Count) + " items.");
             Console.WriteLine("Final list contains " + eventList.Count + " items.");
         }
 
@@ -75,11 +75,29 @@ namespace PauseAnalysisTool
             {
                 int tId = int.Parse(item.id);
                 string tType = item.type;
-                string tValue = item.part.Items[0].ToString().ToLower(); ;
+                string tValue = item.type == "keyboard" ? item.part.Items[1].ToString() : item.part.Items[0].ToString();
+                if (item.part.Items[0].ToString() == "VK_LSHIFT")
+                    tValue = "L_SHIFT";
+                if (item.part.Items[0].ToString() == "VK_RSHIFT")
+                    tValue = "R_SHIFT";
+                if (item.part.Items[0].ToString() == "VK_OEM_7")
+                    tValue = "ä";
+                if (item.part.Items[0].ToString() == "VK_OEM_3")
+                    tValue = "ö";
+                if (item.part.Items[0].ToString() == "VK_OEM_1")
+                    tValue = "ü";
+                if (item.part.Items[0].ToString() == "VK_OEM_4")
+                    tValue = "ß";
+
                 int tStart = int.Parse(item.part.startTime);
                 int tEnd = int.Parse(item.part.endTime);
 
                 simlifiedList.Add(new UserEvent(tId, tType, tValue, tStart, tEnd));
+
+                // TODO: Figure out a way to correctly parse characters like umlauts etc.
+                // It works in my case, because there are no capitalized umauts, but
+                // in a more general case these these things need to be fixed.
+                // Also, this list of if-statements is ugly and cumbersome.
             }
 
             StringBuilder sb = new StringBuilder();
@@ -104,14 +122,12 @@ namespace PauseAnalysisTool
 
             foreach (@event item in eventList.ToList())
             {
-                if (item.type == "mouse" && item.part.type != "mouse")
+                if (item.type == "mouse" && item.part.type != "click")
                 {
                     eventList.Remove(item);
                     counter++;
                 }
             }
-
-            //Console.WriteLine("FilterMouseMovement: Removed " + counter + " events.");
         }
 
         /// <summary>
@@ -145,8 +161,6 @@ namespace PauseAnalysisTool
                     }
                 }
             }
-
-            //Console.WriteLine("FilterByFocus: Removed " + counter + " events.");
         }
     }
 }
