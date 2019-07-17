@@ -80,6 +80,8 @@ namespace PauseAnalysisTool
                     tValue = "L_SHIFT";
                 if (item.part.Items[0].ToString() == "VK_RSHIFT")
                     tValue = "R_SHIFT";
+                if (item.part.Items[0].ToString() == "VK_DELETE")
+                    tValue = "DELETE";
                 if (item.part.Items[0].ToString() == "VK_OEM_7")
                     tValue = "ä";
                 if (item.part.Items[0].ToString() == "VK_OEM_3")
