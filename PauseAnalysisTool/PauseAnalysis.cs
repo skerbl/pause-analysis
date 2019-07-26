@@ -15,10 +15,14 @@ namespace PauseAnalysisTool
         private XDocument xmlDocument;
         private log keyLog;
         private List<@event> eventList;
+        private List<UserEvent> simplifiedList;
+        private int firstEventTime;
+        private int videoOffset = 5766;     // Keystroke logging starts at 5 seconds and 23 frames
 
         public PauseAnalysis(string fileName)
         {
             this.fileName = fileName;
+            simplifiedList = new List<UserEvent>();
         }
 
         /// <summary>
@@ -54,6 +58,7 @@ namespace PauseAnalysisTool
         /// </summary>
         public void FilterData()
         {
+            firstEventTime = int.Parse(keyLog.@event[0].part.startTime);
             eventList = keyLog.@event.ToList();
             FilterMouseMovement();
             FilterByFocus();
@@ -63,13 +68,11 @@ namespace PauseAnalysisTool
         }
 
         /// <summary>
-        /// Converts the keylog data into a simplified format and exports it as a .csv file.
+        /// Converts the keylog data into a simplified format
         /// </summary>
-        /// <param name="fileName">The name of the original file without file extension.</param>
-        public void ConvertToCsv(string fileName)
+        public void ReformatData()
         {
-            const string header = "ID|Type|Value|Start|End";
-            List<UserEvent> simlifiedList = new List<UserEvent>();
+            simplifiedList.Clear();
 
             foreach (@event item in eventList)
             {
@@ -96,18 +99,27 @@ namespace PauseAnalysisTool
                 int tStart = int.Parse(item.part.startTime);
                 int tEnd = int.Parse(item.part.endTime);
 
-                simlifiedList.Add(new UserEvent(tId, tType, tValue, tStart, tEnd));
+                simplifiedList.Add(new UserEvent(tId, tType, tValue, tStart, tEnd));
 
                 // TODO: Figure out a way to correctly parse characters like umlauts etc.
                 // It works in my case, because there are no capitalized umauts, but
                 // in a more general case these these things need to be fixed.
                 // Also, this list of if-statements is ugly and cumbersome.
             }
+        }
 
+        /// <summary>
+        /// Exports data as a .csv file.
+        /// </summary>
+        /// <param name="fileName">The name of the original file without file extension.</param>
+        public void ConvertToCsv(string fileName)
+        {
+            const string header = "ID|Type|Value|Start|End";
+            
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(header);
 
-            foreach (UserEvent item in simlifiedList)
+            foreach (UserEvent item in simplifiedList)
             {
                 sb.AppendLine(item.ToString());
             }

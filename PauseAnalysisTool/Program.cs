@@ -44,6 +44,7 @@ namespace PauseAnalysisTool
             }
 
             PauseAnalysis pauseAnalysis = new PauseAnalysis(tempFileName);
+
             try
             {
                 pauseAnalysis.ValidateFile();
@@ -51,6 +52,8 @@ namespace PauseAnalysisTool
                 pauseAnalysis.ParseData();
 
                 pauseAnalysis.FilterData();
+
+                pauseAnalysis.ReformatData();
 
                 pauseAnalysis.ConvertToCsv(fileName);
 
