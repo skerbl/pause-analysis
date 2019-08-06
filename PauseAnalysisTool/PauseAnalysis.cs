@@ -74,37 +74,85 @@ namespace PauseAnalysisTool
         {
             simplifiedList.Clear();
 
+            int lastEventTime = 0;
+
             foreach (@event item in eventList)
             {
                 int tId = int.Parse(item.id);
                 string tType = item.type;
                 string tValue = item.type == "keyboard" ? item.part.Items[1].ToString() : item.part.Items[0].ToString();
-                if (item.part.Items[0].ToString() == "VK_LSHIFT")
-                    tValue = "L_SHIFT";
-                if (item.part.Items[0].ToString() == "VK_RSHIFT")
-                    tValue = "R_SHIFT";
-                if (item.part.Items[0].ToString() == "VK_DELETE")
-                    tValue = "DELETE";
-                if (item.part.Items[0].ToString() == "VK_SPACE")
-                    tValue = " ";
-                if (item.part.Items[0].ToString() == "VK_OEM_7")
-                    tValue = "ä";
-                if (item.part.Items[0].ToString() == "VK_OEM_3")
-                    tValue = "ö";
-                if (item.part.Items[0].ToString() == "VK_OEM_1")
-                    tValue = "ü";
-                if (item.part.Items[0].ToString() == "VK_OEM_4")
-                    tValue = "ß";
+
+                switch (item.part.Items[0].ToString())
+                {
+                    case "VK_LSHIFT":
+                        tValue = "L_SHIFT";
+                        break;
+                    case "VK_RSHIFT":
+                        tValue = "R_SHIFT";
+                        break;
+                    case "VK_LCONTROL":
+                        tValue = "L_CTRL";
+                        break;
+                    case "VK_RCONTROL":
+                        tValue = "R_CTRL";
+                        break;
+                    case "VK_DELETE":
+                        tValue = "DELETE";
+                        break;
+                    case "VK_SPACE":
+                        tValue = "SPACE";
+                        break;
+                    case "VK_UP":
+                        tValue = "UP_ARROW";
+                        break;
+                    case "VK_DOWN":
+                        tValue = "DOWN_ARROW";
+                        break;
+                    case "VK_LEFT":
+                        tValue = "LEFT_ARROW";
+                        break;
+                    case "VK_RIGHT":
+                        tValue = "RIGHT_ARROW";
+                        break;
+                    case "VK_OEM_7":
+                        tValue = "ä";
+                        break;
+                    case "VK_OEM_3":
+                        tValue = "ö";
+                        break;
+                    case "VK_OEM_1":
+                        tValue = "ü";
+                        break;
+                    case "VK_OEM_4":
+                        tValue = "ß";
+                        break;
+                    default:
+                        break;
+                }
 
                 int tStart = int.Parse(item.part.startTime);
                 int tEnd = int.Parse(item.part.endTime);
+                int tVideo = tStart - firstEventTime + videoOffset;
 
-                simplifiedList.Add(new UserEvent(tId, tType, tValue, tStart, tEnd));
+                UserEvent userEvent = new UserEvent(tId, tType, tValue, tStart, tEnd, tVideo);
+
+                if (lastEventTime == 0)
+                {
+                    userEvent.deltaTime = lastEventTime;
+                }
+                else
+                {
+                    userEvent.deltaTime = tStart - lastEventTime;
+                }
+
+                lastEventTime = tStart;
+
+                simplifiedList.Add(userEvent);
 
                 // TODO: Figure out a way to correctly parse characters like umlauts etc.
                 // It works in my case, because there are no capitalized umauts, but
                 // in a more general case these these things need to be fixed.
-                // Also, this list of if-statements is ugly and cumbersome.
+                // Also, this switch-case statements is ugly and cumbersome.
             }
         }
 
@@ -114,7 +162,7 @@ namespace PauseAnalysisTool
         /// <param name="fileName">The name of the original file without file extension.</param>
         public void ConvertToCsv(string fileName)
         {
-            const string header = "ID|Type|Value|Start|End";
+            const string header = "ID|Type|Value|Start|End|VideoTimestamp|DeltaTime";
             
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(header);
@@ -126,6 +174,28 @@ namespace PauseAnalysisTool
 
             File.WriteAllText(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName + ".csv"),
+                sb.ToString());
+        }
+
+        /// <summary>
+        /// Exports the keylog metadata as a separate .csv file. Appending it to the main data file would
+        /// result in a "messy" import into Excel.
+        /// </summary>
+        /// <param name="fileName">The name of the original file without file extension.</param>
+        public void WriteMetadata(string fileName)
+        {
+            const string header = "Key|Value";
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(header);
+
+            foreach (entry k in keyLog.session)
+            {
+                sb.AppendLine(k.key + "|" + k.value);
+            }
+
+            File.WriteAllText(
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName + "_metadata" + ".csv"),
                 sb.ToString());
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -57,6 +58,8 @@ namespace PauseAnalysisTool
 
                 pauseAnalysis.ConvertToCsv(fileName);
 
+                pauseAnalysis.WriteMetadata(fileName);
+
                 // TODO: Collapse the repeated log events for held down keys into one event.
                 // TODO: Find best way to include session information. Write to a new CSV?
             }
@@ -90,5 +93,28 @@ namespace PauseAnalysisTool
                 writer.Close();
             }
         }
+
+
+        /// <summary>
+        /// Converts a time span from milleseconds into a more human readable format
+        /// </summary>
+        /// <param name="milliseconds">The time span in milliseconds.</param>
+        /// <returns>The time span as a string</returns>
+        public static string ReadableTime(int milliseconds)
+        {
+            var parts = new List<string>();
+            Action<int, string> add = (val, unit) => { if (val > 0) parts.Add(val + unit); };
+            var t = TimeSpan.FromMilliseconds(milliseconds);
+
+            add(t.Days, "d");
+            add(t.Hours, "h");
+            add(t.Minutes, "m");
+            add(t.Seconds, "s");
+            add(t.Milliseconds, "ms");
+
+            return string.Join(" ", parts);
+        }
+
+
     }
 }
