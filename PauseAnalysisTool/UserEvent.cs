@@ -15,19 +15,23 @@ namespace PauseAnalysisTool
         public string Value { get; private set; }
         public int StartTime { get; private set; }
         public int EndTime { get; private set; }
+        public int VideoTimestamp { get; private set; }
 
-        public UserEvent(int id, string type, string value, int startTime, int endTime)
+        public int deltaTime { get; set; }
+
+        public UserEvent(int id, string type, string value, int startTime, int endTime, int videoTimestamp)
         {
             Id = id;
             Type = type;
             Value = value;
             StartTime = startTime;
             EndTime = endTime;
+            VideoTimestamp = videoTimestamp;
         }
 
         public override string ToString()
         {
-            return Id.ToString() + "|" + Type + "|" + Value + "|" + StartTime.ToString() + "|" + EndTime.ToString();
+            return Id.ToString() + "|" + Type + "|" + Value + "|" + StartTime.ToString() + "|" + EndTime.ToString() + "|" + VideoTimestamp.ToString() + "|" + deltaTime;
         }
     }
 }
