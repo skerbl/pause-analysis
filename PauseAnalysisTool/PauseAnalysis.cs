@@ -58,10 +58,12 @@ namespace PauseAnalysisTool
         /// </summary>
         public void FilterData()
         {
+            Console.WriteLine("Please enter the exact title of the process Window (e.g. \"MyDocument.docx - Word\":");
+            string windowName = Console.ReadLine();
             firstEventTime = int.Parse(keyLog.@event[0].part.startTime);
             eventList = keyLog.@event.ToList();
             FilterMouseMovement();
-            FilterByFocus();
+            FilterByFocus(windowName);
 
             Console.WriteLine("Filter applied. Removed " + (keyLog.@event.Length - eventList.Count) + " items.");
             Console.WriteLine("Final list contains " + eventList.Count + " items.");
@@ -125,6 +127,12 @@ namespace PauseAnalysisTool
                         break;
                     case "VK_OEM_4":
                         tValue = "ß";
+                        break;
+
+                    // TODO: Come up with a better way to deal with the pesky " character.
+                    //       This is just a dirty and insufficient fix (will mess up the number 2).
+                    case "VK_2":
+                        tValue = "\\\"";
                         break;
                     default:
                         break;
@@ -219,11 +227,10 @@ namespace PauseAnalysisTool
         /// <summary>
         /// Removes everything that does not happen in a specific window
         /// </summary>
-        private void FilterByFocus()
+        private void FilterByFocus(string windowTitle)
         {
             int counter = 0;
             bool inFocus = false;
-            const string windowTitle = "Übersetzung.docx - Word";
 
             foreach (@event item in eventList.ToList())
             {
