@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -128,14 +129,23 @@ namespace PauseAnalysisTool
                     case "VK_OEM_4":
                         tValue = "ß";
                         break;
-
-                    // TODO: Come up with a better way to deal with the pesky " character.
-                    //       This is just a dirty and insufficient fix (will mess up the number 2).
-                    case "VK_2":
-                        tValue = "\\\"";
-                        break;
+                    //case "VK_2":
+                    //    if (tValue != "2")
+                    //    {
+                    //        tValue = "\\\"";
+                    //    }
+                    //    break;
                     default:
                         break;
+                }
+
+                if (tValue == "\x22")
+                {
+                    tValue = "\\\"";
+                }
+                if (tValue == "\x5C")
+                {
+                    tValue = "\\\\";
                 }
 
                 int tStart = int.Parse(item.part.startTime);
